@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. GLOBAL SAFETY NET
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- HELPERS ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- VALIDATION HELPERS ---
+    function isValidProduct(data) {
+      return data.keys().hasAll(['name', 'anime', 'price', 'image']) &&
+             data.name is string && data.name.size() <= 200 &&
+             data.anime is string && data.anime.size() <= 100 &&
+             data.price is number && data.price >= 0 &&
+             data.image is string && data.image.size() <= 1000;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['userId', 'customerInfo', 'items', 'total', 'status', 'createdAt']) &&
+             data.userId is string &&
+             data.customerInfo.fullName is string && data.customerInfo.fullName.size() <= 200 &&
+             data.customerInfo.email is string && data.customerInfo.email.size() <= 200 &&
+             data.items is list && data.items.size() <= 50 &&
+             data.total is number && data.total >= 0 &&
+             data.status in ['pending', 'confirmed', 'shipped', 'delivered'] &&
+             data.createdAt == request.time;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['userId', 'userName', 'rating', 'comment', 'createdAt', 'verifiedPurchase']) &&
+             data.userId == request.auth.uid &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.comment is string && data.comment.size() <= 1000 &&
+             data.createdAt == request.time;
+    }
+
+    // --- COLLECTIONS ---
+
+    // Products: Anyone can read, only Admins can write
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false;
+
+      // Reviews Subcollection
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isValidReview(request.resource.data);
+      }
+    }
+
+    // Users: Users can read/write their own profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Orders: Users can create orders and read their own
+    match /orders/{orderId} {
+      allow create: if isSignedIn() && isValidOrder(request.resource.data);
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update, delete: if false; // Orders are immutable for users
+    }
+  }
+}

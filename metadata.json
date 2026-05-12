@@ -1,0 +1,6 @@
+{
+  "name": "NeoAkiba",
+  "description": "Premium futuristic anime action figure e-commerce with cyberpunk aesthetic and modern shopping experience.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["ecommerce", "ai-chatbot", "email-notifications"]
+}

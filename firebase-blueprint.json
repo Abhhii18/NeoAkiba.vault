@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "An anime action figure product",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "anime": { "type": "string" },
+        "price": { "type": "number" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "rating": { "type": "number" },
+        "stock": { "type": "number" },
+        "category": { "type": "string" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["name", "anime", "price", "image"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "A customer order",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "customerInfo": {
+          "type": "object",
+          "properties": {
+            "fullName": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "phone": { "type": "string" },
+            "address": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "pinCode": { "type": "string" }
+          },
+          "required": ["fullName", "email", "address", "city", "state", "pinCode"]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "price": { "type": "number" },
+              "quantity": { "type": "number" }
+            }
+          }
+        },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "shipped", "delivered"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "wishlist": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Product review",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "verifiedPurchase": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Collection of anime action figures"
+    },
+    "/products/{productId}/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Reviews for a specific product"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of customer orders"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of registered users"
+    }
+  }
+}
